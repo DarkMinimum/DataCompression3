@@ -47,6 +47,21 @@ public class Main {
 
     public static int SHIFT_VALUE = 128;
 
+    public static void dct(YCbCr[][] image, double[][] Cr) {
+        var shiftedValues = new YCbCr[image.length][image[0].length];
+        var shiftedCr = new double[Cr.length][Cr[0].length];
+
+        //values are shifter
+        for (int i = 0; i < image.length; i++) {
+            for (int j = 0; j < image[0].length; j++) {
+                var origPixel = image[i][j];
+                shiftedValues[i][j] = new YCbCr(origPixel.Y() - SHIFT_VALUE, origPixel.Cb() - SHIFT_VALUE, 0);
+                shiftedCr[i][j] = Cr[i][j] - SHIFT_VALUE;
+            }
+        }
+
+    }
+
 
 
     public static void main(String[] args) {
