@@ -9,8 +9,8 @@ import static org.example.util.ColorUtils.*;
 public class Main {
 
     //changing of this would lead to array out of index because the matrix should be 8 pixels per block, but if it is not, it would crash, probably add blank areas.
-    public static int DOWNSAMPLE_COEF_THE_COLOR = 2;
-    public static int SHIFT_VALUE = 128;
+    public static final int DOWNSAMPLE_COEF_THE_COLOR = 2;
+    public static final int SHIFT_VALUE = 128;
 
     public static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\sample.bmp";
     public static final String PATH_CHROMO = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\compressed.bmp";
@@ -107,8 +107,8 @@ public class Main {
 
     private static void shiftYCbCrByValue(ColorSpaceYCbCr image, double[][] Cr, int factor) {
         //values are shifter
-        for (int i = 0; i < image.Y.length; i++) {
-            for (int j = 0; j < image.Y[0].length; j++) {
+        for (int i = 0; i < image.Y().length; i++) {
+            for (int j = 0; j < image.Y()[0].length; j++) {
                 image.Y()[i][j] -= SHIFT_VALUE;
                 image.Cb()[i][j] -= SHIFT_VALUE;
 
@@ -149,10 +149,10 @@ public class Main {
             var bmp = pathToRGB(PATH);
             var ycbcr = toYCbCr(bmp);
             var downsampleCr = downsample2DArray(ycbcr, DOWNSAMPLE_COEF_THE_COLOR);
-            var ycbcrDown = convertYCbCrtoRGB(ycbcr, downsampleCr, DOWNSAMPLE_COEF_THE_COLOR);
-            saveImage(ycbcrDown, PATH_CHROMO);
 
-            dct(ycbcr, downsampleCr, DOWNSAMPLE_COEF_THE_COLOR);
+            var readyToDCT = new ColorSpaceYCbCr(ycbcr.Y(), ycbcr.Cb(), downsampleCr);
+            saveImage(convertYCbCrtoRGB(ycbcr, downsampleCr, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO);
+            dct(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR);
 
         } catch (IOException e) {
             System.out.println(e);

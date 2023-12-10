@@ -48,7 +48,7 @@ public class ColorUtils {
         return pixels;
     }
 
-    public static ColorSpaceYCbCr[][] toYCbCr(ColorSpaceRGB[][] array) {
+    public static ColorSpaceYCbCr toYCbCr(ColorSpaceRGB array) {
         ColorSpaceYCbCr[][] result = new ColorSpaceYCbCr[array.length][array[0].length];
 
         for (int xPixel = 0; xPixel < array.length; xPixel++) {
