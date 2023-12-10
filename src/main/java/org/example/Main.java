@@ -1,22 +1,20 @@
 package org.example;
 
+import org.example.colorSpace.ColorSpaceYCbCr;
+
 import java.io.IOException;
 
-import static org.example.ColorUtils.*;
+import static org.example.util.ColorUtils.*;
 
 public class Main {
 
+    //changing of this would lead to array out of index because the matrix should be 8 pixels per block, but if it is not, it would crash, probably add blank areas.
+    public static int DOWNSAMPLE_COEF_THE_COLOR = 2;
+    public static int SHIFT_VALUE = 128;
+
+    public static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\sample.bmp";
+    public static final String PATH_CHROMO = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\compressed.bmp";
     public static final int COS_SIZE = 8;
-
-    //load image
-    record ColorSpaceRGB(int[][] R, int[][] B, int[][] G) {
-    }
-
-    //format it to YCbRb
-    record ColorSpaceYCbCr(double[][] Y, double[][] Cb, double[][] Cr) {
-
-    }
-
 
     public static int[][] QUANTIZATION_TABLE = {
             {
@@ -45,10 +43,6 @@ public class Main {
             }
     };
 
-    public static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\sample.bmp";
-    public static final String PATH_CHROMO = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\compressed.bmp";
-
-
     public static double[][] downsample2DArray(ColorSpaceYCbCr[][] originalArray, int downsamplingFactor) {
         int originalRows = originalArray.length;
         int originalCols = originalArray[0].length;
@@ -67,10 +61,6 @@ public class Main {
         return downsampledArray;
     }
 
-    //changing of this would lead to array out of index because the matrix should be 8 pixels per block, but if it is not, it would crash, probably add blank areas.
-    public static int DOWNSAMPLE_COEF_THE_COLOR = 2;
-
-    public static int SHIFT_VALUE = 128;
 
     public static void dct(ColorSpaceYCbCr image, double[][] Cr, int downSampleCoef) {
         var length = image.Y().length;

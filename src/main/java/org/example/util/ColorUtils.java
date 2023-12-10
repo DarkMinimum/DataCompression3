@@ -1,4 +1,9 @@
-package org.example;
+package org.example.util;
+
+import org.example.colorSpace.ColorSpaceRGB;
+import org.example.colorSpace.ColorSpaceYCbCr;
+import org.example.pixel.PixelRGB;
+import org.example.pixel.PixelYCbCr;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -10,15 +15,15 @@ public class ColorUtils {
 
     }
 
-    public static Main.ColorSpaceRGB parseRGB(int rgb) {
+    public static PixelRGB parseRGB(int rgb) {
         int red = (rgb >> 16) & 0xFF;
         int green = (rgb >> 8) & 0xFF;
         int blue = rgb & 0xFF;
 
-        return new Main.ColorSpaceRGB(red, green, blue);
+        return new PixelRGB(red, green, blue);
     }
 
-    public static int combineRGB(Main.ColorSpaceRGB colorSpaceRgb) {
+    public static int combineRGB(PixelRGB colorSpaceRgb) {
         // Ensure that the values are within the valid range [0, 255]
         var red = Math.min(255, Math.max(0, colorSpaceRgb.R()));
         var green = Math.min(255, Math.max(0, colorSpaceRgb.G()));
@@ -28,10 +33,10 @@ public class ColorUtils {
         return (red << 16) | (green << 8) | blue;
     }
 
-    public static Main.ColorSpaceRGB[][] pathToRGB(String BMPFileName) throws IOException {
+    public static ColorSpaceRGB[][] pathToRGB(String BMPFileName) throws IOException {
         BufferedImage image = ImageIO.read(new File(BMPFileName));
 
-        Main.ColorSpaceRGB[][] pixels = new Main.ColorSpaceRGB[image.getWidth()][image.getHeight()];
+        ColorSpaceRGB[][] pixels = new ColorSpaceRGB[image.getWidth()][image.getHeight()];
 
         for (int xPixel = 0; xPixel < image.getWidth(); xPixel++) {
             for (int yPixel = 0; yPixel < image.getHeight(); yPixel++) {
@@ -43,8 +48,8 @@ public class ColorUtils {
         return pixels;
     }
 
-    public static Main.ColorSpaceYCbCr[][] toYCbCr(Main.ColorSpaceRGB[][] array) {
-        Main.ColorSpaceYCbCr[][] result = new Main.ColorSpaceYCbCr[array.length][array[0].length];
+    public static ColorSpaceYCbCr[][] toYCbCr(ColorSpaceRGB[][] array) {
+        ColorSpaceYCbCr[][] result = new ColorSpaceYCbCr[array.length][array[0].length];
 
         for (int xPixel = 0; xPixel < array.length; xPixel++) {
             for (int yPixel = 0; yPixel < array[0].length; yPixel++) {
@@ -57,7 +62,7 @@ public class ColorUtils {
     }
 
     // Function to convert RGB to YCbCr
-    public static Main.ColorSpaceYCbCr rgbToYCbCr(Main.ColorSpaceRGB colorSpaceRgb) {
+    public static PixelYCbCr rgbToYCbCr(PixelRGB colorSpaceRgb) {
         int r = colorSpaceRgb.R();
         int g = colorSpaceRgb.G();
         int b = colorSpaceRgb.B();
@@ -66,11 +71,11 @@ public class ColorUtils {
         long cb = Math.round(128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b);
         long cr = Math.round(128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b);
 
-        return new Main.ColorSpaceYCbCr(y, cb, cr);
+        return new PixelYCbCr((int) y, (int) cb, (int) cr);
     }
 
     // Function to convert YCbCr to RGB
-    public static Main.ColorSpaceRGB yCbCrToRgb(Main.ColorSpaceYCbCr ycbcr, double downSampleCr) {
+    public static PixelRGB yCbCrToRgb(PixelYCbCr ycbcr, double downSampleCr) {
         double y = ycbcr.Y();
         double cb = ycbcr.Cb();
         double cr = downSampleCr;
@@ -79,11 +84,11 @@ public class ColorUtils {
         long g = Math.round(y - 0.344136 * (cb - 128.0) - 0.714136 * (cr - 128.0));
         long b = Math.round(y + 1.772 * (cb - 128.0));
 
-        return new Main.ColorSpaceRGB((int) r, (int) g, (int) b);
+        return new PixelRGB((int) r, (int) g, (int) b);
     }
 
-    public static Main.ColorSpaceRGB[][] convertYCbCrtoRGB(Main.ColorSpaceYCbCr[][] image, double[][] downsampledCr, int factor) {
-        Main.ColorSpaceRGB[][] colorSpaceRgbImage = new Main.ColorSpaceRGB[image.length][image[0].length];
+    public static ColorSpaceRGB[][] convertYCbCrtoRGB(ColorSpaceYCbCr[][] image, double[][] downsampledCr, int factor) {
+        ColorSpaceRGB[][] colorSpaceRgbImage = new ColorSpaceRGB[image.length][image[0].length];
 
         var length = image.length;
         var width = image[0].length;
@@ -101,7 +106,7 @@ public class ColorUtils {
         return colorSpaceRgbImage;
     }
 
-    public static int[][] toSingleValue2D(Main.ColorSpaceRGB[][] colorSpaceRgb) {
+    public static int[][] toSingleValue2D(ColorSpaceRGB[][] colorSpaceRgb) {
         var image = new int[colorSpaceRgb.length][colorSpaceRgb[0].length];
 
         for (int y = 0; y < colorSpaceRgb.length; y++) {
@@ -113,7 +118,7 @@ public class ColorUtils {
         return image;
     }
 
-    public static void saveImage(Main.ColorSpaceRGB[][] colorSpaceRgbs, String outputPath) {
+    public static void saveImage(ColorSpaceRGB[][] colorSpaceRgbs, String outputPath) {
         var rgb = toSingleValue2D(colorSpaceRgbs);
         BufferedImage image = new BufferedImage(rgb.length, rgb[0].length, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < rgb.length; y++) {
