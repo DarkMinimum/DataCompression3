@@ -20,8 +20,6 @@ public class Main {
     public static final String PATH_CHROMO = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\512\\chromatic_downsample.bmp";
     public static final String PATH_MY_JPEG = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\512\\512.mjpeg";
 
-    //changing of this would lead to array out of index because the matrix should be 8 pixels per block, but if it is not, it would crash, probably add blank areas.
-
     public static void main(String[] args) {
         try {
             var bmp = pathToRGB(PATH);
