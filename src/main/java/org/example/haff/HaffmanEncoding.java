@@ -9,6 +9,8 @@ import org.example.colorSpace.ColorSpaceYCbCr;
 
 public class HaffmanEncoding {
 
+    public static List<Map<String, String>> maps = new ArrayList<>();
+
     private static Node findAndRemoveMin(List<Node> list) {
         if (list.isEmpty()) {
             return null;
@@ -68,8 +70,9 @@ public class HaffmanEncoding {
         return map;
     }
 
-    public static String decodeString(Map<String, String> map, String encodedWord) {
+    public static String decodeString(String encodedWord, int index) {
         var result = new StringBuilder();
+        var map = maps.get(index);
         while (encodedWord.length() != 0) {
             var keys = map.keySet();
             for (String key : keys) {
@@ -85,35 +88,37 @@ public class HaffmanEncoding {
 
     public static String testHaffMethod(String word) {
         var tree = buildTree(new ArrayList<>(buildAlphabet(word)));
-
-//        System.out.println(String.format(MSG_ALGOS, word, encoded, decodeString(createCoversationMap(tree, word), encoded)));
-
-        return encodeString(tree, word);
+        var encoded = encodeString(tree, word);
+        var map = createCoversationMap(tree, word);
+        maps.add(map);
+        return encoded;
     }
 
     public static String encodeWithHuffman(ColorSpaceYCbCr readyToDecode, int downsampleCoefTheColor) {
         var y = new StringBuilder();
         var cb = new StringBuilder();
         var cr = new StringBuilder();
+
         var length = readyToDecode.Y().length;
         var width = readyToDecode.Y()[0].length;
-        var crLength = length / downsampleCoefTheColor;
-        var crWidth = width / downsampleCoefTheColor;
-
-        //should be iterated as zigzag???
         for (int i = 0; i < length; i++) {
             for (int j = 0; j < width; j++) {
                 y.append((int) readyToDecode.Y()[i][j]);
                 cb.append((int) readyToDecode.Cb()[i][j]);
-                if (i != length - 1 && j != width - 1) {
+                if (i < length && j < width) {
                     y.append(".");
                     cb.append(".");
                 }
-                if (crLength > i && crWidth > j) {
-                    cr.append((int) readyToDecode.Cr()[i][j]);
-                    if (i != crLength - 1 && j != crWidth - 1) {
-                        cr.append(".");
-                    }
+            }
+        }
+
+        var crLength = length / downsampleCoefTheColor;
+        var crWidth = width / downsampleCoefTheColor;
+        for (int i = 0; i < crLength; i++) {
+            for (int j = 0; j < crWidth; j++) {
+                cr.append((int) readyToDecode.Cr()[i][j]);
+                if (i < crLength && j < crWidth) {
+                    cr.append(".");
                 }
             }
         }

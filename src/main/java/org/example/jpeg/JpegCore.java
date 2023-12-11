@@ -23,27 +23,19 @@ public class JpegCore {
         return downsampledArray;
     }
 
-    public static ColorSpaceYCbCr dct(ColorSpaceYCbCr image) {
+    public static ColorSpaceYCbCr dctAndQuantization(ColorSpaceYCbCr image) {
         var length = image.Y().length;
         var width = image.Y()[0].length;
         var crLength = length / DOWNSAMPLE_COEF_THE_COLOR;
         var crWidth = width / DOWNSAMPLE_COEF_THE_COLOR;
         image.shiftYCbCrByValue(SHIFT_VALUE);
-        var Y2D = new double[length][width];
-        var Cb2D = new double[length][width];
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
-                Y2D[i][j] = image.Y()[i][j];
-                Cb2D[i][j] = image.Cb()[i][j];
-            }
-        }
         var Y2dRes = new double[length][width];
         var Cb2DRes = new double[length][width];
         var CrRes = new double[length / DOWNSAMPLE_COEF_THE_COLOR][width / DOWNSAMPLE_COEF_THE_COLOR];
         for (int i = 0; i < length; i += COS_SIZE) {
             for (int j = 0; j < width; j += COS_SIZE) {
-                applyDCTAndQuantize(Y2D, i, j, Y2dRes);
-                applyDCTAndQuantize(Cb2D, i, j, Cb2DRes);
+                applyDCTAndQuantize(image.Y(), i, j, Y2dRes);
+                applyDCTAndQuantize(image.Cb(), i, j, Cb2DRes);
                 if (crLength > i && crWidth > j) {
                     applyDCTAndQuantize(image.Cr(), i, j, CrRes);
                 }
@@ -66,6 +58,49 @@ public class JpegCore {
                     }
                 }
                 result[u][v] = (int) (0.25 * cu * cv * sum) / QUANTIZATION_TABLE[u - start][v - end];
+            }
+        }
+    }
+
+    public static ColorSpaceYCbCr reQuantizeAndReDCT(ColorSpaceYCbCr image) {
+        //requantize
+        var length = image.Y().length;
+        var width = image.Y()[0].length;
+
+        var crLength = length / DOWNSAMPLE_COEF_THE_COLOR;
+        var crWidth = width / DOWNSAMPLE_COEF_THE_COLOR;
+
+        var Y2dRes = new double[length][width];
+        var Cb2DRes = new double[length][width];
+        var CrRes = new double[length / DOWNSAMPLE_COEF_THE_COLOR][width / DOWNSAMPLE_COEF_THE_COLOR];
+        for (int i = 0; i < length; i += COS_SIZE) {
+            for (int j = 0; j < width; j += COS_SIZE) {
+                applyQuantizeAndDCT(image.Y(), i, j, Y2dRes);
+                applyQuantizeAndDCT(image.Cb(), i, j, Cb2DRes);
+                if (crLength > i && crWidth > j) {
+                    applyQuantizeAndDCT(image.Cr(), i, j, CrRes);
+                }
+            }
+        }
+        var yCbCr = new ColorSpaceYCbCr(Y2dRes, Cb2DRes, CrRes);
+        image.shiftYCbCrByValue(-SHIFT_VALUE);
+        return yCbCr;
+    }
+
+    public static void applyQuantizeAndDCT(double[][] block, int start, int end, double[][] result) {
+        for (int x = start; x < start + COS_SIZE; x++) {
+            for (int y = end; y < end + COS_SIZE; y++) {
+                double sum = 0.0;
+                for (int u = start; u < start + COS_SIZE; u++) {
+                    for (int v = end; v < end + COS_SIZE; v++) {
+                        double cu = (u == 0) ? 1 / Math.sqrt(2) : 1;
+                        double cv = (v == 0) ? 1 / Math.sqrt(2) : 1;
+                        double cosTerm1 = Math.cos((2 * x + 1) * u * Math.PI / (2 * COS_SIZE));
+                        double cosTerm2 = Math.cos((2 * y + 1) * v * Math.PI / (2 * COS_SIZE));
+                        sum += cu * cv * block[u][v] * QUANTIZATION_TABLE[u - start][v - end] * cosTerm1 * cosTerm2;
+                    }
+                }
+                result[x][y] = sum;
             }
         }
     }
