@@ -4,7 +4,9 @@ import static org.example.pixel.PixelRGB.combineRGB;
 import static org.example.pixel.PixelRGB.parseRGB;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -62,6 +64,14 @@ public class ColorUtils {
             File outputFile = new File(outputPath);
             ImageIO.write(image, "bmp", outputFile);
             System.out.println("Image saved successfully to: " + outputPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveMyJpeg(String content, String filePath) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            writer.write(content);
         } catch (IOException e) {
             e.printStackTrace();
         }

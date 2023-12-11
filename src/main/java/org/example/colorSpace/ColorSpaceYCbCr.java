@@ -26,4 +26,17 @@ public record ColorSpaceYCbCr(double[][] Y, double[][] Cb, double[][] Cr) {
         return new ColorSpaceYCbCr(Y, Cb, Cr);
     }
 
+    public void shiftYCbCrByValue(int shiftValue) {
+        for (int i = 0; i < this.Y().length; i++) {
+            for (int j = 0; j < this.Y()[0].length; j++) {
+                this.Y()[i][j] -= shiftValue;
+                this.Cb()[i][j] -= shiftValue;
+            }
+        }
+        for (int i = 0; i < this.Cr().length; i++) {
+            for (int j = 0; j < this.Cr()[0].length; j++) {
+                this.Cr[i][j] -= shiftValue;
+            }
+        }
+    }
 }

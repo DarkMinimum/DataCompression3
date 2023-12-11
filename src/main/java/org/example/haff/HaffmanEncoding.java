@@ -5,13 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HaffmanEncoding {
+import org.example.colorSpace.ColorSpaceYCbCr;
 
-    public static final String MSG_ALGOS = """
-            - initial: %s,
-            - encoded: %s,
-            - decoded: %s.
-        """;
+public class HaffmanEncoding {
 
     private static Node findAndRemoveMin(List<Node> list) {
         if (list.isEmpty()) {
@@ -93,5 +89,42 @@ public class HaffmanEncoding {
 //        System.out.println(String.format(MSG_ALGOS, word, encoded, decodeString(createCoversationMap(tree, word), encoded)));
 
         return encodeString(tree, word);
+    }
+
+    public static String encodeWithHuffman(ColorSpaceYCbCr readyToDecode, int downsampleCoefTheColor) {
+        var y = new StringBuilder();
+        var cb = new StringBuilder();
+        var cr = new StringBuilder();
+        var length = readyToDecode.Y().length;
+        var width = readyToDecode.Y()[0].length;
+        var crLength = length / downsampleCoefTheColor;
+        var crWidth = width / downsampleCoefTheColor;
+
+        //should be iterated as zigzag???
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < width; j++) {
+                y.append((int) readyToDecode.Y()[i][j]);
+                cb.append((int) readyToDecode.Cb()[i][j]);
+                if (i != length - 1 && j != width - 1) {
+                    y.append(".");
+                    cb.append(".");
+                }
+                if (crLength > i && crWidth > j) {
+                    cr.append((int) readyToDecode.Cr()[i][j]);
+                    if (i != crLength - 1 && j != crWidth - 1) {
+                        cr.append(".");
+                    }
+                }
+            }
+        }
+
+        var decodedY = HaffmanEncoding.testHaffMethod(y.toString());
+        var decodedCb = HaffmanEncoding.testHaffMethod(cb.toString());
+        var decodedCr = HaffmanEncoding.testHaffMethod(cr.toString());
+
+        return new StringBuilder()
+            .append(decodedY).append("\n")
+            .append(decodedCb).append("\n")
+            .append(decodedCr).toString();
     }
 }

@@ -16,10 +16,10 @@ public record PixelRGB(int R, int G, int B) {
         return (red << 16) | (green << 8) | blue;
     }
 
-    public static PixelRGB yCbCrToRgb(PixelYCbCr ycbcr, double downSampleCr) {
+    public static PixelRGB yCbCrToRgb(PixelYCbCr ycbcr) {
         double y = ycbcr.Y();
         double cb = ycbcr.Cb();
-        double cr = downSampleCr;
+        double cr = ycbcr.Cr();
         long r = Math.round(y + 1.402 * (cr - 128.0));
         long g = Math.round(y - 0.344136 * (cb - 128.0) - 0.714136 * (cr - 128.0));
         long b = Math.round(y + 1.772 * (cb - 128.0));
