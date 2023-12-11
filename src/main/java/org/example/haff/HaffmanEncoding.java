@@ -8,9 +8,9 @@ import java.util.Map;
 public class HaffmanEncoding {
 
     public static final String MSG_ALGOS = """
-            - initial string was: %s,
-            - after encoding it got this form: %s,
-            - after decoding it is: %s.
+            - initial: %s,
+            - encoded: %s,
+            - decoded: %s.
         """;
 
     private static Node findAndRemoveMin(List<Node> list) {
@@ -89,11 +89,9 @@ public class HaffmanEncoding {
 
     public static String testHaffMethod(String word) {
         var tree = buildTree(new ArrayList<>(buildAlphabet(word)));
-        var encoded = encodeString(tree, word);
 
-        System.out.println(String.format(MSG_ALGOS, word, encoded,
-            decodeString(createCoversationMap(tree, word), encoded)));
+//        System.out.println(String.format(MSG_ALGOS, word, encoded, decodeString(createCoversationMap(tree, word), encoded)));
 
-        return encoded;
+        return encodeString(tree, word);
     }
 }

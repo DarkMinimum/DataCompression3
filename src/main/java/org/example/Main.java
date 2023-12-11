@@ -15,11 +15,11 @@ import org.example.haff.HaffmanEncoding;
 public class Main {
 
     //changing of this would lead to array out of index because the matrix should be 8 pixels per block, but if it is not, it would crash, probably add blank areas.
-    public static final int DOWNSAMPLE_COEF_THE_COLOR = 4;
+    public static final int DOWNSAMPLE_COEF_THE_COLOR = 8;
     public static final int SHIFT_VALUE = 128;
-    public static final String PATH = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\l.bmp";
-    public static final String PATH_CHROMO = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\compressed.bmp";
-    public static final String PATH_MY_JPEG = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\c.mjpeg";
+    public static final String PATH = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\512\\512.bmp";
+    public static final String PATH_CHROMO = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\512\\chromatic_downsample.bmp";
+    public static final String PATH_MY_JPEG = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\512\\512.mjpeg";
     public static final int COS_SIZE = 8;
     public static int[][] QUANTIZATION_TABLE = {{16, 11, 10, 16, 24, 40, 51, 61}, {12, 12, 14, 19, 26, 58, 60, 55}, {14, 13, 16, 24, 40, 57, 69, 56}, {14, 17, 22, 29, 51, 87, 80, 62}, {18, 22, 37, 56, 68, 109, 103, 77}, {24, 35, 55, 64, 81, 104, 113, 92}, {49, 64, 78, 87, 103, 121, 120, 101}, {72, 92, 95, 98, 112, 100, 103, 99}};
 
@@ -109,10 +109,9 @@ public class Main {
             var downsampleCr = downsampleMatrix(ycbcr.Cr(), DOWNSAMPLE_COEF_THE_COLOR);
             var readyToDCT = new ColorSpaceYCbCr(ycbcr.Y(), ycbcr.Cb(), downsampleCr);
             saveImage(convertYCbCrToRGB(ycbcr, downsampleCr, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO);
-            var readyToDecode = dct(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR);
 
+            var readyToDecode = dct(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR);
             saveStringToFile(encodeWithHaffmun(readyToDecode), PATH_MY_JPEG);
-            //decode it with freaking haffman!!!!
         } catch (IOException e) {
             System.out.println(e);
         }
@@ -122,7 +121,6 @@ public class Main {
         var y = new StringBuilder();
         var cb = new StringBuilder();
         var cr = new StringBuilder();
-
         var length = readyToDecode.Y().length;
         var width = readyToDecode.Y()[0].length;
         var crLength = length / DOWNSAMPLE_COEF_THE_COLOR;
@@ -133,15 +131,12 @@ public class Main {
             for (int j = 0; j < width; j++) {
                 y.append((int) readyToDecode.Y()[i][j]);
                 cb.append((int) readyToDecode.Cb()[i][j]);
-
                 if (i != length - 1 && j != width - 1) {
                     y.append(".");
                     cb.append(".");
                 }
-
                 if (crLength > i && crWidth > j) {
                     cr.append((int) readyToDecode.Cr()[i][j]);
-
                     if (i != crLength - 1 && j != crWidth - 1) {
                         cr.append(".");
                     }
@@ -153,9 +148,10 @@ public class Main {
         var decodedCb = HaffmanEncoding.testHaffMethod(cb.toString());
         var decodedCr = HaffmanEncoding.testHaffMethod(cr.toString());
 
-        var result = new StringBuilder();
-        result.append(decodedY).append("\n").append(decodedCb).append("\n").append(decodedCr);
-        return result.toString();
+        return new StringBuilder()
+            .append(decodedY).append("\n")
+            .append(decodedCb).append("\n")
+            .append(decodedCr).toString();
     }
 
     public static void saveStringToFile(String content, String filePath) {
