@@ -1,32 +1,17 @@
 package org.example.haff;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class HaffmanEncoding {
 
-    public static final String PLACEHOLDER = "_";
     public static final String MSG_ALGOS = """
-        Method type is %s:
             - initial string was: %s,
             - after encoding it got this form: %s,
             - after decoding it is: %s.
         """;
-
-    public static final String MSG_MEASURE = """
-        The coef of compression is:\s
-            - encoded with size:    %s
-            - initial with size:    %s
-            - coef: %s
-        """;
-
-    record Mapping(String symbol, String mapping) {
-
-    }
 
     private static Node findAndRemoveMin(List<Node> list) {
         if (list.isEmpty()) {
@@ -48,10 +33,6 @@ public class HaffmanEncoding {
         for (int i = 0; i < codedWord.length(); i++) {
             var symbol = String.valueOf(codedWord.charAt(i));
             result += root.findPath(symbol);
-
-            if (i != codedWord.length() - 1) {
-                result += PLACEHOLDER;
-            }
         }
 
         return result;
@@ -92,36 +73,27 @@ public class HaffmanEncoding {
     }
 
     public static String decodeString(Map<String, String> map, String encodedWord) {
-        var result = encodedWord;
-
-        var list = map.entrySet().stream()
-            .map(e -> new Mapping(e.getKey(), e.getValue()))
-            .collect(Collectors.toList());
-
-        Collections.sort(list, (o1, o2) -> {
-            return o2.mapping().length() - o1.mapping().length();
-        });
-
-        for (Mapping m : list) {
-            var key = String.valueOf(m.symbol());
-            result = result.replaceAll(map.get(key), key);
+        var result = new StringBuilder();
+        while (encodedWord.length() != 0) {
+            var keys = map.keySet();
+            for (String key : keys) {
+                if (encodedWord.startsWith(map.get(key))) {
+                    result.append(key);
+                    encodedWord = encodedWord.substring(map.get(key).length());
+                    break;
+                }
+            }
         }
-
-        return result.replaceAll(PLACEHOLDER, "");
+        return result.toString();
     }
 
-    public static void testHaffMethod(String word) {
+    public static String testHaffMethod(String word) {
         var tree = buildTree(new ArrayList<>(buildAlphabet(word)));
         var encoded = encodeString(tree, word);
-        var bytesEncoded = Math.ceil(encoded.replace("_", "").length() / 8.0);
-        var coef = bytesEncoded / (double) word.getBytes().length * 100.0;
 
-        System.out.println(String.format(MSG_ALGOS, "HAFF", word,
-            encoded.replace("_", ""),
+        System.out.println(String.format(MSG_ALGOS, word, encoded,
             decodeString(createCoversationMap(tree, word), encoded)));
-        System.out.println(String.format(MSG_MEASURE,
-            bytesEncoded,
-            word.getBytes().length,
-            coef));
+
+        return encoded;
     }
 }
