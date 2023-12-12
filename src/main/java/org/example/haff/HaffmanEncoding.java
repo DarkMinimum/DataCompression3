@@ -1,5 +1,7 @@
 package org.example.haff;
 
+import static org.example.util.ColorUtils.zigZagMatrix;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,34 +93,19 @@ public class HaffmanEncoding {
     }
 
     public static String encodeWithHuffman(ColorSpaceYCbCr readyToDecode, int downsampleCoefTheColor) {
-        var y = new StringBuilder();
-        var cb = new StringBuilder();
-        var cr = new StringBuilder();
         var length = readyToDecode.Y().length;
         var width = readyToDecode.Y()[0].length;
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
-                y.append((int) readyToDecode.Y()[i][j]);
-                cb.append((int) readyToDecode.Cb()[i][j]);
-                if (i < length && j < width) {
-                    y.append(".");
-                    cb.append(".");
-                }
-            }
-        }
+        var y = zigZagMatrix(readyToDecode.Y(), length, width);
+        var cb = zigZagMatrix(readyToDecode.Cb(), length, width);
+
         var crLength = length / downsampleCoefTheColor;
         var crWidth = width / downsampleCoefTheColor;
-        for (int i = 0; i < crLength; i++) {
-            for (int j = 0; j < crWidth; j++) {
-                cr.append((int) readyToDecode.Cr()[i][j]);
-                if (i < crLength && j < crWidth) {
-                    cr.append(".");
-                }
-            }
-        }
-        var decodedY = HaffmanEncoding.testHaffMethod(y.toString());
-        var decodedCb = HaffmanEncoding.testHaffMethod(cb.toString());
-        var decodedCr = HaffmanEncoding.testHaffMethod(cr.toString());
+        var cr = zigZagMatrix(readyToDecode.Cr(), crLength, crWidth);
+
+        var decodedY = HaffmanEncoding.testHaffMethod(y);
+        var decodedCb = HaffmanEncoding.testHaffMethod(cb);
+        var decodedCr = HaffmanEncoding.testHaffMethod(cr);
+
         return new StringBuilder()
             .append(decodedY).append("\n")
             .append(decodedCb).append("\n")
@@ -132,13 +119,27 @@ public class HaffmanEncoding {
             var raw = decodeString(layers[l], l).split("\\.");
             var size = (int) Math.sqrt(raw.length);
             var array = new double[size][size];
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
-                    array[i][j] = Integer.parseInt(raw[j * size + i]);
-                }
-            }
+            fillMatrix(array, raw);
             ycbcrLayers.add(array);
         }
         return new ColorSpaceYCbCr(ycbcrLayers.get(0), ycbcrLayers.get(1), ycbcrLayers.get(2));
+    }
+
+    public static void fillMatrix(double[][] matrix, String[] values) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        var startValue = 0;
+
+        for (int i = rows + cols - 1; i >= 0; i--) {
+            if (i % 2 == 0) { // Even rows (from top to bottom)
+                for (int row = Math.min(i, rows - 1); row >= 0 && i - row < cols; row--) {
+                    matrix[row][i - row] = Integer.parseInt(values[startValue++]);
+                }
+            } else { // Odd rows (from bottom to top)
+                for (int col = Math.min(i, cols - 1); col >= 0 && i - col < rows; col--) {
+                    matrix[i - col][col] = Integer.parseInt(values[startValue++]);
+                }
+            }
+        }
     }
 }

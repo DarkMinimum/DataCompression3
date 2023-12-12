@@ -4,6 +4,7 @@ import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
 import static org.example.haff.HaffmanEncoding.decode;
 import static org.example.haff.HaffmanEncoding.encodeWithHuffman;
+import static org.example.haff.HaffmanEncoding.fillMatrix;
 import static org.example.jpeg.JpegCore.DOWNSAMPLE_COEF_THE_COLOR;
 import static org.example.jpeg.JpegCore.dctAndQuantization;
 import static org.example.jpeg.JpegCore.downsampleMatrix;
@@ -11,6 +12,7 @@ import static org.example.jpeg.JpegCore.reQuantizeAndReDCT;
 import static org.example.util.ColorUtils.pathToRGB;
 import static org.example.util.ColorUtils.saveImage;
 import static org.example.util.ColorUtils.saveMyJpeg;
+import static org.example.util.ColorUtils.zigZagMatrix;
 
 import java.io.IOException;
 
@@ -18,10 +20,11 @@ import org.example.colorSpace.ColorSpaceYCbCr;
 
 public class Main {
 
-    public static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\64.bmp";
-    public static final String PATH_CHROMO = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\chromatic_downsample.bmp";
-    public static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\64.mjpeg";
-    public static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\decompressed.bmp";
+    public static final String CORE_PATH = "D:\\ideaProj\\DataCompression3\\src\\main\\resources";
+    public static final String PATH = CORE_PATH + "\\64\\64.bmp";
+    public static final String PATH_CHROMO = CORE_PATH + "\\64\\chromatic_downsample.bmp";
+    public static final String PATH_MY_JPEG = CORE_PATH + "\\64\\64.mjpeg";
+    public static final String PATH_DECOMPRESSED_JPEG = CORE_PATH + "\\64\\decompressed.bmp";
 
     public static void main(String[] args) {
         try {

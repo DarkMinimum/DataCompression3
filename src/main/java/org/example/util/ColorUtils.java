@@ -62,10 +62,10 @@ public class ColorUtils {
         }
         try {
 
-            if (shouldBeRotated) {
-                flipImageVertically(image);
-                image = rotate(image, 90);
-            }
+//            if (shouldBeRotated) {
+//                flipImageVertically(image);
+//                image = rotate(image, 90);
+//            }
 
             File outputFile = new File(outputPath);
             ImageIO.write(image, "bmp", outputFile);
@@ -83,11 +83,106 @@ public class ColorUtils {
         }
     }
 
+    public static String zigZagMatrix(double arr[][], int n, int m) {
+        int row = 0, col = 0;
+
+        boolean row_inc = false;
+        var result = new StringBuilder();
+        int mn = Math.min(m, n);
+        for (int len = 1; len <= mn; ++len) {
+            for (int i = 0; i < len; ++i) {
+                result.append((int)arr[row][col]).append(".");
+                if (i + 1 == len) {
+                    break;
+                }
+                if (row_inc) {
+                    ++row;
+                    --col;
+                } else {
+                    --row;
+                    ++col;
+                }
+            }
+
+            if (len == mn) {
+                break;
+            }
+
+            if (row_inc) {
+                ++row;
+                row_inc = false;
+            } else {
+                ++col;
+                row_inc = true;
+            }
+        }
+
+        if (row == 0) {
+            if (col == m - 1) {
+                ++row;
+            } else {
+                ++col;
+            }
+            row_inc = true;
+        } else {
+            if (row == n - 1) {
+                ++col;
+            } else {
+                ++row;
+            }
+            row_inc = false;
+        }
+
+        int MAX = Math.max(m, n) - 1;
+        for (int len, diag = MAX; diag > 0; --diag) {
+
+            if (diag > mn) {
+                len = mn;
+            } else {
+                len = diag;
+            }
+
+            for (int i = 0; i < len; ++i) {
+                result.append((int)arr[row][col]).append(".");
+
+                if (i + 1 == len) {
+                    break;
+                }
+
+                if (row_inc) {
+                    ++row;
+                    --col;
+                } else {
+                    ++col;
+                    --row;
+                }
+            }
+
+            if (row == 0 || col == m - 1) {
+                if (col == m - 1) {
+                    ++row;
+                } else {
+                    ++col;
+                }
+                row_inc = true;
+            } else if (col == 0 || row == n - 1) {
+                if (row == n - 1) {
+                    ++col;
+                } else {
+                    ++row;
+                }
+                row_inc = false;
+            }
+        }
+
+        return result.toString();
+    }
+
     /**
      * Perform a rotation of the provided BufferedImage using degrees of
      * 90, 180, or 270.
      *
-     * @param bi     BufferedImage to be rotated
+     * @param bi BufferedImage to be rotated
      * @param degree
      * @return rotated BufferedImage instance
      */
@@ -96,29 +191,36 @@ public class ColorUtils {
         int height = bi.getHeight();
 
         BufferedImage biFlip;
-        if (degree == 90 || degree == 270)
+        if (degree == 90 || degree == 270) {
             biFlip = new BufferedImage(height, width, bi.getType());
-        else if (degree == 180)
+        } else if (degree == 180) {
             biFlip = new BufferedImage(width, height, bi.getType());
-        else
+        } else {
             return bi;
+        }
 
         if (degree == 90) {
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
                     biFlip.setRGB(height - j - 1, i, bi.getRGB(i, j));
+                }
+            }
         }
 
         if (degree == 180) {
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
                     biFlip.setRGB(width - i - 1, height - j - 1, bi.getRGB(i, j));
+                }
+            }
         }
 
         if (degree == 270) {
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
                     biFlip.setRGB(j, width - i - 1, bi.getRGB(i, j));
+                }
+            }
         }
 
         bi.flush();
@@ -141,12 +243,12 @@ public class ColorUtils {
 
         for (int i = 0; i < theImage.getHeight() / 2; i++) {
             scanline1 = raster.getDataElements(0, i, theImage.getWidth(),
-                    1, scanline1);
+                1, scanline1);
             scanline2 = raster.getDataElements(0, theImage.getHeight() - i
-                    - 1, theImage.getWidth(), 1, scanline2);
+                - 1, theImage.getWidth(), 1, scanline2);
             raster.setDataElements(0, i, theImage.getWidth(), 1, scanline2);
             raster.setDataElements(0, theImage.getHeight() - i - 1,
-                    theImage.getWidth(), 1, scanline1);
+                theImage.getWidth(), 1, scanline1);
         }
     }
 }
