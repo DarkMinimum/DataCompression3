@@ -4,6 +4,7 @@ import static org.example.pixel.PixelRGB.combineRGB;
 import static org.example.pixel.PixelRGB.parseRGB;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -51,7 +52,7 @@ public class ColorUtils {
         return image;
     }
 
-    public static void saveImage(ColorSpaceRGB colorSpaceRgbs, String outputPath) {
+    public static void saveImage(ColorSpaceRGB colorSpaceRgbs, String outputPath, boolean shouldBeRotated) {
         var rgb = toSingleValue2D(colorSpaceRgbs);
         BufferedImage image = new BufferedImage(rgb.length, rgb[0].length, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < rgb.length; y++) {
@@ -60,6 +61,12 @@ public class ColorUtils {
             }
         }
         try {
+
+            if (shouldBeRotated) {
+                flipImageVertically(image);
+                image = rotate(image, 90);
+            }
+
             File outputFile = new File(outputPath);
             ImageIO.write(image, "bmp", outputFile);
             System.out.println("Image saved successfully to: " + outputPath);
@@ -73,6 +80,73 @@ public class ColorUtils {
             writer.write(content);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Perform a rotation of the provided BufferedImage using degrees of
+     * 90, 180, or 270.
+     *
+     * @param bi     BufferedImage to be rotated
+     * @param degree
+     * @return rotated BufferedImage instance
+     */
+    public static BufferedImage rotate(BufferedImage bi, int degree) {
+        int width = bi.getWidth();
+        int height = bi.getHeight();
+
+        BufferedImage biFlip;
+        if (degree == 90 || degree == 270)
+            biFlip = new BufferedImage(height, width, bi.getType());
+        else if (degree == 180)
+            biFlip = new BufferedImage(width, height, bi.getType());
+        else
+            return bi;
+
+        if (degree == 90) {
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    biFlip.setRGB(height - j - 1, i, bi.getRGB(i, j));
+        }
+
+        if (degree == 180) {
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    biFlip.setRGB(width - i - 1, height - j - 1, bi.getRGB(i, j));
+        }
+
+        if (degree == 270) {
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    biFlip.setRGB(j, width - i - 1, bi.getRGB(i, j));
+        }
+
+        bi.flush();
+        bi = null;
+
+        return biFlip;
+    }
+
+    /**
+     * Flips the supplied BufferedImage vertically. This is often a necessary
+     * conversion step to display a Java2D image correctly with OpenGL and vice
+     * versa.
+     *
+     * @param theImage the image to flip
+     */
+    public static void flipImageVertically(BufferedImage theImage) {
+        WritableRaster raster = theImage.getRaster();
+        Object scanline1 = null;
+        Object scanline2 = null;
+
+        for (int i = 0; i < theImage.getHeight() / 2; i++) {
+            scanline1 = raster.getDataElements(0, i, theImage.getWidth(),
+                    1, scanline1);
+            scanline2 = raster.getDataElements(0, theImage.getHeight() - i
+                    - 1, theImage.getWidth(), 1, scanline2);
+            raster.setDataElements(0, i, theImage.getWidth(), 1, scanline2);
+            raster.setDataElements(0, theImage.getHeight() - i - 1,
+                    theImage.getWidth(), 1, scanline1);
         }
     }
 }

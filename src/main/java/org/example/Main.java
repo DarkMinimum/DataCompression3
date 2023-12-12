@@ -18,10 +18,10 @@ import org.example.colorSpace.ColorSpaceYCbCr;
 
 public class Main {
 
-    public static final String PATH = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\64\\64.bmp";
-    public static final String PATH_CHROMO = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\64\\chromatic_downsample.bmp";
-    public static final String PATH_MY_JPEG = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\64\\64.mjpeg";
-    public static final String PATH_DECOMPRESSED_JPEG = "D:\\ideaProj\\DataCompression3\\src\\main\\resources\\64\\decompressed.bmp";
+    public static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\64.bmp";
+    public static final String PATH_CHROMO = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\chromatic_downsample.bmp";
+    public static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\64.mjpeg";
+    public static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\64\\decompressed.bmp";
 
     public static void main(String[] args) {
         try {
@@ -29,14 +29,17 @@ public class Main {
             var ycbcr = toYCbCr(bmp);
             var downsampleCr = downsampleMatrix(ycbcr.Cr());
             var readyToDCT = new ColorSpaceYCbCr(ycbcr.Y(), ycbcr.Cb(), downsampleCr);
-            saveImage(convertYCbCrToRGB(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO);
-            var readyToDecode = dctAndQuantization(readyToDCT);
-            var content = encodeWithHuffman(readyToDecode, DOWNSAMPLE_COEF_THE_COLOR);
+            saveImage(convertYCbCrToRGB(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO, false);
+//            var readyToDecode = dctAndQuantization(readyToDCT);
+//            var content = encodeWithHuffman(readyToDecode, DOWNSAMPLE_COEF_THE_COLOR);
+
+            var content = encodeWithHuffman(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR);
+
             saveMyJpeg(content, PATH_MY_JPEG);
             var rawYCbCr = decode(content);
-            var res = reQuantizeAndReDCT(rawYCbCr);
+//            var res = reQuantizeAndReDCT(rawYCbCr);
             //save as decompressed image
-            saveImage(convertYCbCrToRGB(res, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG);
+            saveImage(convertYCbCrToRGB(rawYCbCr, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG, true);
             System.out.println("yo");
         } catch (IOException e) {
             System.out.println(e);
