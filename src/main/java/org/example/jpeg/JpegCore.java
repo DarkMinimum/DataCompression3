@@ -66,10 +66,8 @@ public class JpegCore {
         //requantize
         var length = image.Y().length;
         var width = image.Y()[0].length;
-
         var crLength = length / DOWNSAMPLE_COEF_THE_COLOR;
         var crWidth = width / DOWNSAMPLE_COEF_THE_COLOR;
-
         var Y2dRes = new double[length][width];
         var Cb2DRes = new double[length][width];
         var CrRes = new double[length / DOWNSAMPLE_COEF_THE_COLOR][width / DOWNSAMPLE_COEF_THE_COLOR];

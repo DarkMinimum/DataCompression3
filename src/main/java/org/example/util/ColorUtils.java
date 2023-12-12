@@ -59,7 +59,6 @@ public class ColorUtils {
                 image.setRGB(y, x, rgb[y][x]);
             }
         }
-
         try {
             File outputFile = new File(outputPath);
             ImageIO.write(image, "bmp", outputFile);

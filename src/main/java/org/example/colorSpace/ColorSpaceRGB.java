@@ -15,18 +15,15 @@ public record ColorSpaceRGB(int[][] R, int[][] B, int[][] G) {
             for (int j = 0; j < width; j++) {
                 var Y = (int) image.Y()[i][j];
                 var Cb = (int) image.Cb()[i][j];
-
                 int di = i / factor;
                 int dj = j / factor;
                 var Cr = (int) image.Cr()[di][dj];
-
                 var rgbPixel = yCbCrToRgb(new PixelYCbCr(Y, Cb, Cr));
                 R[i][j] = rgbPixel.R();
                 G[i][j] = rgbPixel.G();
                 B[i][j] = rgbPixel.B();
             }
         }
-
         return new ColorSpaceRGB(R, G, B);
     }
 }
