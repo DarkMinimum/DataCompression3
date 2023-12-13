@@ -107,9 +107,9 @@ public class HaffmanEncoding {
         var decodedCr = HaffmanEncoding.testHaffMethod(cr);
 
         return new StringBuilder()
-            .append(decodedY).append("\n")
-            .append(decodedCb).append("\n")
-            .append(decodedCr).toString();
+                .append(decodedY).append("\n")
+                .append(decodedCb).append("\n")
+                .append(decodedCr).toString();
     }
 
     public static ColorSpaceYCbCr decode(String content) {
@@ -130,7 +130,7 @@ public class HaffmanEncoding {
         int cols = matrix[0].length;
         var startValue = 0;
 
-        for (int i = rows + cols - 1; i >= 0; i--) {
+        for (int i = 0; i < rows + cols - 1; i++) {
             if (i % 2 == 0) { // Even rows (from top to bottom)
                 for (int row = Math.min(i, rows - 1); row >= 0 && i - row < cols; row--) {
                     matrix[row][i - row] = Integer.parseInt(values[startValue++]);
