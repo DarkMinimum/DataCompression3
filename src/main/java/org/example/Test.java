@@ -1,23 +1,8 @@
 package org.example;
 
 import org.decimal4j.util.DoubleRounder;
-import org.example.colorSpace.ColorSpaceYCbCr;
-
-import java.io.IOException;
-
-import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
-import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
-import static org.example.haff.HaffmanEncoding.decode;
-import static org.example.haff.HaffmanEncoding.encodeWithHuffman;
-import static org.example.jpeg.JpegCore.*;
-import static org.example.util.ColorUtils.*;
 
 public class Test {
-
-    private static String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\8\\8.bmp";
-
-    public static final String PATH_MY = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\8\\file.myjpeg";
-    public static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\8\\deco.bmp";
 
     public static final int N = 8;
 
@@ -30,17 +15,6 @@ public class Test {
             {128, 136, 123, 136, 154, 180, 198, 154},
             {123, 105, 110, 149, 136, 136, 180, 166},
             {110, 136, 123, 123, 123, 136, 154, 136}
-    };
-
-    public static double[][] targetBeforeQuant = {
-            {162.3, 40.6, 20.0, 72.3, 30.3, 12.5, -19.7, -11.5},
-            {30.5, 108.4, 10.5, 32.3, 27.7, -15.5, 18.4, -2.0},
-            {-94.1, -60.1, 12.3, -43.4, -31.3, 6.1, -3.3, 7.1},
-            {-38.6, -83.4, -5.4, -22.2, -13.5, 15.5, -1.3, 3.5},
-            {-31.3, 17.9, -5.5, -12.4, 14.3, -6.0, 11.5, -6.0},
-            {-0.9, -11.8, 12.8, 0.2, 28.1, 12.6, 8.4, 2.9},
-            {4.6, -2.4, 12.2, 6.6, -18.7, -12.8, 7.7, 12.0},
-            {-10.0, 11.2, 7.8, 16.3, 21.5, 0.0, 5.9, 10.7}
     };
 
     public static int[][] Q90 = {
@@ -76,22 +50,17 @@ public class Test {
             {255, 255, 255, 255, 255, 255, 255, 255}
     };
 
+    private static double C(int k) {
+        return k == 0 ? 1.0 / Math.sqrt(2.0) : 1.0;
+    }
+
     public static double cos(int x, int i) {
         var numenator = (2 * x + 1) * i * Math.PI;
         var denumenator = 16.0;
         return Math.cos(numenator / denumenator);
     }
 
-    public static double C(int u) {
-        if (u == 0) {
-            return 1.0 / Math.sqrt(2.0);
-        } else {
-            return 1;
-        }
-    }
-
-    public static double D(int i, int j, double[][] block) {
-        var root = 0.25;
+    public static double D(int i, int j, int[][] block) {
         var Ci = C(i);
         var Cj = C(j);
 
@@ -102,78 +71,104 @@ public class Test {
             }
         }
 
-        return root * Ci * Cj * sum;
+        return 0.25 * Ci * Cj * sum;
     }
 
-    public static void main(String[] args) throws IOException {
+    //TODO: where I made a mistake????
+    public static double ID(int i, int j, double[][] block) {
+        var Ci = C(i);
+        var Cj = C(j);
 
-        var bmp = pathToRGB(PATH);
-        var ycbcr = toYCbCr(bmp);
-        ycbcr.shiftYCbCrByValue(128);
+        var sum = 0.0;
+        for (int x = 0; x < N; x++) {
+            for (int y = 0; y < N; y++) {
+                sum += block[x][y] * cos(x, i) * cos(y, j);
+            }
+        }
 
-        double[][] resultsD = new double[N][N];
-        double[][] res1 = new double[N][N];
-        dct(ycbcr.Y(), resultsD, res1);
-
-        resultsD = new double[N][N];
-        double[][] res2 = new double[N][N];
-        dct(ycbcr.Cb(), resultsD, res2);
-
-        resultsD = new double[N][N];
-        double[][] res3 = new double[N][N];
-        dct(ycbcr.Cr(), resultsD, res3);
-
-        var readyToDecode = new ColorSpaceYCbCr(res1, res2, res3);
-        var content = encodeWithHuffman(readyToDecode, DOWNSAMPLE_COEF_THE_COLOR);
-        saveMyJpeg(content, PATH_MY);
-        var rawYCbCr = decode(content);
-        var res = reQuantizeAndReDCT(rawYCbCr);
-        saveImage(convertYCbCrToRGB(res, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG, true);
-
+        return sum / (0.25 * Ci * Cj);
     }
 
-    private static void dct(double[][] numbers, double[][] resultsD, double[][] res) {
+    public static double inverseDCT(int u, int v, double[][] dctCoefficients) {
+        double sum = 0.0;
+
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                double Ci = C(i);
+                double Cj = C(j);
+                double cosU = cos(u, i);
+                double cosV = cos(v, j);
+
+                sum += Ci * Cj * dctCoefficients[i][j] * cosU * cosV;
+            }
+        }
+
+        return 0.25 * sum;
+    }
+
+    private static double[][] dct(int[][] numbers) {
+        var res = new double[N][N];
         //shift -128
-//        for (int i = 0; i < N; i++) {
-//            for (int j = 0; j < N; j++) {
-//                numbers[i][j] -= 128;
-//            }
-//        }
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                numbers[i][j] -= 128;
+            }
+        }
 
         //compression by itself
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                resultsD[i][j] = DoubleRounder.round(D(i, j, numbers), 1);
+                res[i][j] = (int) DoubleRounder.round(D(i, j, numbers), 1);
             }
         }
-
-        //check if everything is fine
-//        for (int i = 0; i < N; i++) {
-//            for (int j = 0; j < N; j++) {
-//                var diff = Math.abs(Math.abs(resultsD[i][j]) - Math.abs(targetBeforeQuant[i][j]));
-//                if (diff > 1.0) {
-//                    throw new RuntimeException("Boarder exceeded");
-//                }
-//            }
-//        }
 
         //quantanization by Q10
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                res[i][j] = (int) (resultsD[i][j] / Q10[i][j]);
+                res[i][j] = res[i][j] / Q90[i][j];
             }
         }
+
+        return res;
     }
 
-    private static void idct(double[][] numbers, double[][] res) {
+    private static int[][] idct(double[][] numbers) {
+        var res = new int[N][N];
         //quantanization by Q10
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                res[i][j] = (numbers[i][j] * Q10[i][j]);
+                numbers[i][j] = (numbers[i][j] * Q90[i][j]);
             }
         }
 
+        //compression by itself
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                res[i][j] = (int) DoubleRounder.round(inverseDCT(i, j, numbers), 1);
+            }
+        }
 
+        //shift +128
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                res[i][j] += 128;
+            }
+        }
 
+        return res;
+    }
+
+    public static void main(String[] args) {
+        var array = new int[N][N];
+
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                array[i][j] = numbers[i][j];
+            }
+        }
+
+        var res = dct(array);
+        var res2 = idct(res);
+        System.out.println();
     }
 }
