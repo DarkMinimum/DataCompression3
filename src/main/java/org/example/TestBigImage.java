@@ -6,6 +6,7 @@ import org.example.colorSpace.ColorSpaceYCbCr;
 import java.io.IOException;
 
 import static org.example.Test.*;
+import static org.example.Test.cos;
 import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
 import static org.example.haff.HaffmanEncoding.decode;
@@ -13,8 +14,7 @@ import static org.example.haff.HaffmanEncoding.encodeWithHuffman;
 import static org.example.jpeg.JpegCore.DOWNSAMPLE_COEF_THE_COLOR;
 import static org.example.util.ColorUtils.*;
 
-public class TestSmallImage {
-
+public class TestBigImage {
     public static final int N = 8;
     private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".bmp";
     private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".myjpeg";
@@ -24,29 +24,24 @@ public class TestSmallImage {
         var bmp = pathToRGB(PATH);
         var ycbcr = toYCbCr(bmp);
 
-        var y = new double[N][N];
-        dct(ycbcr.Y(), y);
-        var Cb = new double[N][N];
-        dct(ycbcr.Cb(), Cb);
-        var Cr = new double[N][N];
-        dct(ycbcr.Cr(), Cr);
+        var y = dct(ycbcr.Y());
+        var Cb = dct(ycbcr.Cb());
+        var Cr = dct(ycbcr.Cr());
 
         var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr), DOWNSAMPLE_COEF_THE_COLOR);
         saveMyJpeg(content, PATH_MY_JPEG);
         var rawYCbCr = decode(content);
 
-        var cY = new double[N][N];
-        idct(rawYCbCr.Y(), cY);
-        var cCb = new double[N][N];
-        idct(rawYCbCr.Cb(), cCb);
-        var cCr = new double[N][N];
-        idct(rawYCbCr.Cr(), cCr);
+        var cY = idct(rawYCbCr.Y());
+        var cCb = idct(rawYCbCr.Cb());
+        var cCr = idct(rawYCbCr.Cr());
 
-        var decompressed = new ColorSpaceYCbCr(cY, ycbcr.Cb(), ycbcr.Cr());
+        var decompressed = new ColorSpaceYCbCr(cY, cCb, cCr);
         saveImage(convertYCbCrToRGB(decompressed, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG);
     }
 
-    private static void dct(double[][] numbers, double[][] target) {
+    private static double[][] dct(double[][] numbers) {
+        var target = new double[N][N];
         //copy initial
         var copy = copyArray(numbers);
 
@@ -76,12 +71,14 @@ public class TestSmallImage {
             }
         }
 
+        return target;
+
     }
 
-
-    private static void idct(double[][] numbers, double[][] target) {
+    private static double[][] idct(double[][] numbers) {
         //copy
         var copy = copyArray(numbers);
+        var target = new double[N][N];
 
         //quantanization by Q10
         for (int i = 0; i < N; i++) {
@@ -108,6 +105,8 @@ public class TestSmallImage {
                 target[u][v] += 128;
             }
         }
+
+        return target;
     }
 
     private static double[][] copyArray(double[][] numbers) {
@@ -119,5 +118,4 @@ public class TestSmallImage {
         }
         return copy;
     }
-
 }
