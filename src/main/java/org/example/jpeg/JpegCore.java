@@ -47,24 +47,6 @@ public class JpegCore {
         return new ColorSpaceYCbCr(Y2dRes, Cb2DRes, CrRes);
     }
 
-    public static void applyDCTAndQuantize(double[][] block, int start, int end, double[][] result) {
-        for (int u = start; u < start + COS_SIZE; u++) {
-            for (int v = end; v < end + COS_SIZE; v++) {
-                double cu = (u == 0) ? 1 / Math.sqrt(2) : 1;
-                double cv = (v == 0) ? 1 / Math.sqrt(2) : 1;
-                double sum = 0.0;
-                for (int x = start; x < start + COS_SIZE; x++) {
-                    for (int y = end; y < end + COS_SIZE; y++) {
-                        double cosTerm1 = Math.cos((2 * x + 1) * u * Math.PI / (2 * COS_SIZE));
-                        double cosTerm2 = Math.cos((2 * y + 1) * v * Math.PI / (2 * COS_SIZE));
-                        sum += block[x][y] * cosTerm1 * cosTerm2;
-                    }
-                }
-                result[u][v] = (int) ((0.25 * cu * cv * sum) / QUANTIZATION_TABLE[u - start][v - end]);
-            }
-        }
-    }
-
     public static ColorSpaceYCbCr reQuantizeAndReDCT(ColorSpaceYCbCr image) {
         var length = image.Y().length;
         var width = image.Y()[0].length;
@@ -85,6 +67,24 @@ public class JpegCore {
         var yCbCr = new ColorSpaceYCbCr(Y2dRes, Cb2DRes, CrRes);
         image.shiftYCbCrByValue(-SHIFT_VALUE);
         return yCbCr;
+    }
+
+    public static void applyDCTAndQuantize(double[][] block, int start, int end, double[][] result) {
+        for (int u = start; u < start + COS_SIZE; u++) {
+            for (int v = end; v < end + COS_SIZE; v++) {
+                double cu = (u == 0) ? 1 / Math.sqrt(2) : 1;
+                double cv = (v == 0) ? 1 / Math.sqrt(2) : 1;
+                double sum = 0.0;
+                for (int x = start; x < start + COS_SIZE; x++) {
+                    for (int y = end; y < end + COS_SIZE; y++) {
+                        double cosTerm1 = Math.cos((2 * x + 1) * u * Math.PI / (2 * COS_SIZE));
+                        double cosTerm2 = Math.cos((2 * y + 1) * v * Math.PI / (2 * COS_SIZE));
+                        sum += block[x][y] * cosTerm1 * cosTerm2;
+                    }
+                }
+                result[u][v] = (int) ((0.25 * cu * cv * sum) / QUANTIZATION_TABLE[u - start][v - end]);
+            }
+        }
     }
 
     public static void applyQuantizeAndDCT(double[][] block, int start, int end, double[][] result) {

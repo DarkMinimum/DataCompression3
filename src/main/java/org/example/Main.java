@@ -25,7 +25,7 @@ public class Main {
             var ycbcr = toYCbCr(bmp);
             var downsampleCr = downsampleMatrix(ycbcr.Cr());
             var readyToDCT = new ColorSpaceYCbCr(ycbcr.Y(), ycbcr.Cb(), downsampleCr);
-            saveImage(convertYCbCrToRGB(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO, false);
+            saveImage(convertYCbCrToRGB(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO);
             var readyToDecode = dctAndQuantization(readyToDCT);
 
             var content = encodeWithHuffman(readyToDecode, DOWNSAMPLE_COEF_THE_COLOR);
@@ -33,7 +33,7 @@ public class Main {
             saveMyJpeg(content, PATH_MY_JPEG);
             var rawYCbCr = decode(content);
             var res = reQuantizeAndReDCT(rawYCbCr);
-            saveImage(convertYCbCrToRGB(res, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG, true);
+            saveImage(convertYCbCrToRGB(res, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG);
         } catch (IOException e) {
             System.out.println(e);
         }

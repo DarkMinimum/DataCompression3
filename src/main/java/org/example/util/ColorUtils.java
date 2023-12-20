@@ -52,7 +52,7 @@ public class ColorUtils {
         return image;
     }
 
-    public static void saveImage(ColorSpaceRGB colorSpaceRgbs, String outputPath, boolean shouldBeRotated) {
+    public static void saveImage(ColorSpaceRGB colorSpaceRgbs, String outputPath) {
         var rgb = toSingleValue2D(colorSpaceRgbs);
         BufferedImage image = new BufferedImage(rgb.length, rgb[0].length, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < rgb.length; y++) {
@@ -61,12 +61,6 @@ public class ColorUtils {
             }
         }
         try {
-
-//            if (shouldBeRotated) {
-//                flipImageVertically(image);
-//                image = rotate(image, 90);
-//            }
-
             File outputFile = new File(outputPath);
             ImageIO.write(image, "bmp", outputFile);
             System.out.println("Image saved successfully to: " + outputPath);

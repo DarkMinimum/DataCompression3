@@ -50,7 +50,7 @@ public class Test {
             {255, 255, 255, 255, 255, 255, 255, 255}
     };
 
-    private static double C(int k) {
+    public static double C(int k) {
         return k == 0 ? 1.0 / Math.sqrt(2.0) : 1.0;
     }
 
@@ -60,51 +60,51 @@ public class Test {
         return Math.cos(numenator / denumenator);
     }
 
-    public static double D(int i, int j, int[][] block) {
-        var Ci = C(i);
-        var Cj = C(j);
-
-        var sum = 0.0;
-        for (int x = 0; x < N; x++) {
-            for (int y = 0; y < N; y++) {
-                sum += block[x][y] * cos(x, i) * cos(y, j);
-            }
-        }
-
-        return 0.25 * Ci * Cj * sum;
-    }
-
-    //TODO: where I made a mistake????
-    public static double ID(int i, int j, double[][] block) {
-        var Ci = C(i);
-        var Cj = C(j);
-
-        var sum = 0.0;
-        for (int x = 0; x < N; x++) {
-            for (int y = 0; y < N; y++) {
-                sum += block[x][y] * cos(x, i) * cos(y, j);
-            }
-        }
-
-        return sum / (0.25 * Ci * Cj);
-    }
-
-    public static double inverseDCT(int u, int v, double[][] dctCoefficients) {
-        double sum = 0.0;
-
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                double Ci = C(i);
-                double Cj = C(j);
-                double cosU = cos(u, i);
-                double cosV = cos(v, j);
-
-                sum += Ci * Cj * dctCoefficients[i][j] * cosU * cosV;
-            }
-        }
-
-        return 0.25 * sum;
-    }
+//    public static double D(int i, int j, int[][] block) {
+//        var Ci = C(i);
+//        var Cj = C(j);
+//
+//        var sum = 0.0;
+//        for (int x = 0; x < N; x++) {
+//            for (int y = 0; y < N; y++) {
+//                sum += block[x][y] * cos(x, i) * cos(y, j);
+//            }
+//        }
+//
+//        return 0.25 * Ci * Cj * sum;
+//    }
+//
+//    //TODO: where I made a mistake????
+//    public static double ID(int i, int j, double[][] block) {
+//        var Ci = C(i);
+//        var Cj = C(j);
+//
+//        var sum = 0.0;
+//        for (int x = 0; x < N; x++) {
+//            for (int y = 0; y < N; y++) {
+//                sum += block[x][y] * cos(x, i) * cos(y, j);
+//            }
+//        }
+//
+//        return sum / (0.25 * Ci * Cj);
+//    }
+//
+//    public static double inverseDCT(int u, int v, double[][] dctCoefficients) {
+//        double sum = 0.0;
+//
+//        for (int i = 0; i < N; i++) {
+//            for (int j = 0; j < N; j++) {
+//                double Ci = C(i);
+//                double Cj = C(j);
+//                double cosU = cos(u, i);
+//                double cosV = cos(v, j);
+//
+//                sum += Ci * Cj * dctCoefficients[i][j] * cosU * cosV;
+//            }
+//        }
+//
+//        return 0.25 * sum;
+//    }
 
     private static double[][] dct(int[][] numbers) {
         var res = new double[N][N];
@@ -118,14 +118,19 @@ public class Test {
         //compression by itself
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                res[i][j] = (int) DoubleRounder.round(D(i, j, numbers), 1);
-            }
-        }
+                var Ci = C(i);
+                var Cj = C(j);
+                var sum = 0.0;
+                for (int x = 0; x < N; x++) {
+                    for (int y = 0; y < N; y++) {
+                        sum += numbers[x][y] * cos(x, i) * cos(y, j);
+                    }
+                }
 
-        //quantanization by Q10
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                res[i][j] = res[i][j] / Q90[i][j];
+                var value = DoubleRounder.round(0.25 * Ci * Cj * sum, 1);
+
+                //quantanization by Q10
+                res[i][j] = (int) (value / Q90[i][j]);
             }
         }
 
@@ -142,16 +147,21 @@ public class Test {
         }
 
         //compression by itself
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                res[i][j] = (int) DoubleRounder.round(inverseDCT(i, j, numbers), 1);
-            }
-        }
-
-        //shift +128
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                res[i][j] += 128;
+        for (int u = 0; u < N; u++) {
+            for (int v = 0; v < N; v++) {
+                double sum = 0.0;
+                for (int i = 0; i < N; i++) {
+                    for (int j = 0; j < N; j++) {
+                        double Ci = C(i);
+                        double Cj = C(j);
+                        double cosU = cos(u, i);
+                        double cosV = cos(v, j);
+                        sum += Ci * Cj * numbers[i][j] * cosU * cosV;
+                    }
+                }
+                var value = DoubleRounder.round(0.25 * sum, 1);
+                //shift +128
+                res[u][v] = (int) value + 128;
             }
         }
 
@@ -160,7 +170,6 @@ public class Test {
 
     public static void main(String[] args) {
         var array = new int[N][N];
-
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 array[i][j] = numbers[i][j];
@@ -171,4 +180,5 @@ public class Test {
         var res2 = idct(res);
         System.out.println();
     }
+
 }
