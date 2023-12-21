@@ -1,11 +1,11 @@
-package org.example;
+package org.example.test;
 
 import org.decimal4j.util.DoubleRounder;
 import org.example.colorSpace.ColorSpaceYCbCr;
 
 import java.io.IOException;
 
-import static org.example.Test.*;
+import static org.example.test.Test.*;
 import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
 import static org.example.haff.HaffmanEncoding.decode;
@@ -31,7 +31,7 @@ public class TestSmallImage {
         var Cr = new double[N][N];
         dct(ycbcr.Cr(), Cr);
 
-        var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr), DOWNSAMPLE_COEF_THE_COLOR);
+        var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr));
         saveMyJpeg(content, PATH_MY_JPEG);
         var rawYCbCr = decode(content);
 

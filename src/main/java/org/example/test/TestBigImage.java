@@ -1,11 +1,11 @@
-package org.example;
+package org.example.test;
 
 import org.decimal4j.util.DoubleRounder;
 import org.example.colorSpace.ColorSpaceYCbCr;
 
 import java.io.IOException;
 
-import static org.example.Test.*;
+import static org.example.test.Test.*;
 import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
 import static org.example.haff.HaffmanEncoding.decode;
@@ -15,7 +15,7 @@ import static org.example.jpeg.JpegCore.DOWNSAMPLE_COEF_THE_COLOR;
 import static org.example.util.ColorUtils.*;
 
 public class TestBigImage {
-    public static final int N = 1024;
+    public static final int N = 128;
     private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".bmp";
     private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".myjpeg";
     private static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + "_dec.bmp";
@@ -44,7 +44,7 @@ public class TestBigImage {
         }
 
         System.out.println("ENCODE");
-        var content = encodeWithHuffman(new ColorSpaceYCbCr(resY, resCb, resCr), DOWNSAMPLE_COEF_THE_COLOR);
+        var content = encodeWithHuffman(new ColorSpaceYCbCr(resY, resCb, resCr));
         saveMyJpeg(content, PATH_MY_JPEG);
         System.out.println("DECODE");
         var rawYCbCr = decode(content);

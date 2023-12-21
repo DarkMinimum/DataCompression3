@@ -28,7 +28,7 @@ public class Main {
             saveImage(convertYCbCrToRGB(readyToDCT, DOWNSAMPLE_COEF_THE_COLOR), PATH_CHROMO);
             var readyToDecode = dctAndQuantization(readyToDCT);
 
-            var content = encodeWithHuffman(readyToDecode, DOWNSAMPLE_COEF_THE_COLOR);
+            var content = encodeWithHuffman(readyToDecode);
 
             saveMyJpeg(content, PATH_MY_JPEG);
             var rawYCbCr = decode(content);

@@ -28,12 +28,12 @@ public class HaffmanEncoding {
     }
 
     public static String encodeString(Node root, String codedWord) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < codedWord.length(); i++) {
             var symbol = String.valueOf(codedWord.charAt(i));
-            result += root.findPath(symbol);
+            result.append(root.findPath(symbol));
         }
-        return result;
+        return result.toString();
     }
 
     public static List<Node> buildAlphabet(String codedWord) {
@@ -92,19 +92,16 @@ public class HaffmanEncoding {
         return encoded;
     }
 
-    public static String encodeWithHuffman(ColorSpaceYCbCr readyToDecode, int downsampleCoefTheColor) {
+    public static String encodeWithHuffman(ColorSpaceYCbCr readyToDecode) {
         var length = readyToDecode.Y().length;
         var width = readyToDecode.Y()[0].length;
         var y = zigZagMatrix(readyToDecode.Y(), length, width);
         var cb = zigZagMatrix(readyToDecode.Cb(), length, width);
+        var cr = zigZagMatrix(readyToDecode.Cr(), readyToDecode.Cr().length, readyToDecode.Cr()[0].length);
 
-        var crLength = length / downsampleCoefTheColor;
-        var crWidth = width / downsampleCoefTheColor;
-        var cr = zigZagMatrix(readyToDecode.Cr(), crLength, crWidth);
-
-        var decodedY = HaffmanEncoding.testHaffMethod(y);
-        var decodedCb = HaffmanEncoding.testHaffMethod(cb);
-        var decodedCr = HaffmanEncoding.testHaffMethod(cr);
+        var decodedY = HaffmanEncoding.testHaffMethod(rleString(y));
+        var decodedCb = HaffmanEncoding.testHaffMethod(rleString(cb));
+        var decodedCr = HaffmanEncoding.testHaffMethod(rleString(cr));
 
         return new StringBuilder()
                 .append(decodedY).append("\n")
@@ -112,11 +109,77 @@ public class HaffmanEncoding {
                 .append(decodedCr).toString();
     }
 
+    public static String rleString(String source) {
+        var symbols = source.split("\\.");
+        var counter = 1;
+        var result = new StringBuilder();
+
+        var current = symbols[0];
+        for (int i = 1; i < symbols.length; i++) {
+            var word = symbols[i];
+
+            if (word.equals(current)) {
+                counter++;
+            } else {
+                if (counter > 1) {
+                    result.append(counter).append("@").append(current);
+                } else {
+                    result.append(current);
+                }
+                counter = 1;
+                result.append(".");
+
+            }
+
+            if (i == symbols.length - 1) {
+                if (word.equals(current)) {
+                    counter++;
+                    result.append(counter).append("@").append(word);
+                } else {
+                    result.append(word);
+                }
+
+                break;
+            }
+
+            current = word;
+        }
+
+        return result.toString();
+    }
+
+    public static String inverseRleString(String source) {
+        var combs = source.split("\\.");
+        var res = new StringBuilder();
+        for (int pos = 0; pos < combs.length; ++pos) {
+            var word = combs[pos];
+            var comb = word.split("@");
+            if (comb.length == 1) {
+                res.append(word);
+            } else {
+                int number = Integer.parseInt(comb[0]);
+                for (int i = 0; i < number; i++) {
+                    res.append(comb[1]);
+
+                    if (i != number - 1) {
+                        res.append(".");
+                    }
+                }
+            }
+
+            if (pos != combs.length - 1) {
+                res.append(".");
+            }
+        }
+        return res.toString();
+    }
+
     public static ColorSpaceYCbCr decode(String content) {
         var layers = content.split("\n");
         var ycbcrLayers = new ArrayList<double[][]>();
         for (int l = 0; l < layers.length; l++) {
-            var raw = decodeString(layers[l], l).split("\\.");
+            var raw = inverseRleString(decodeString(layers[l], l)).split("\\.");
+            //add drle
             var size = (int) Math.sqrt(raw.length);
             var array = new double[size][size];
             fillMatrix(array, raw);
