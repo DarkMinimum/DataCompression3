@@ -8,13 +8,14 @@ import java.io.IOException;
 import static org.example.Test.*;
 import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
+import static org.example.haff.HaffmanEncoding.decode;
+import static org.example.haff.HaffmanEncoding.encodeWithHuffman;
 import static org.example.jpeg.JpegCore.COS_SIZE;
 import static org.example.jpeg.JpegCore.DOWNSAMPLE_COEF_THE_COLOR;
-import static org.example.util.ColorUtils.pathToRGB;
-import static org.example.util.ColorUtils.saveImage;
+import static org.example.util.ColorUtils.*;
 
 public class TestBigImage {
-    public static final int N = 128;
+    public static final int N = 1024;
     private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".bmp";
     private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".myjpeg";
     private static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + "_dec.bmp";
@@ -33,6 +34,7 @@ public class TestBigImage {
         var resCr = new double[N][N];
 
 
+        System.out.println("DCT");
         for (int i = 0; i < N; i += COS_SIZE) {
             for (int j = 0; j < N; j += COS_SIZE) {
                 dct(y, i, j, resY);
@@ -41,12 +43,11 @@ public class TestBigImage {
             }
         }
 
-
-//        var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr), DOWNSAMPLE_COEF_THE_COLOR);
-//        saveMyJpeg(content, PATH_MY_JPEG);
-//        var rawYCbCr = decode(content);
-
-        var rawYCbCr = new ColorSpaceYCbCr(resY, resCb, resCr);
+        System.out.println("ENCODE");
+        var content = encodeWithHuffman(new ColorSpaceYCbCr(resY, resCb, resCr), DOWNSAMPLE_COEF_THE_COLOR);
+        saveMyJpeg(content, PATH_MY_JPEG);
+        System.out.println("DECODE");
+        var rawYCbCr = decode(content);
 
         var cY = copyArray(rawYCbCr.Y());
         var resCY = new double[N][N];
@@ -57,6 +58,7 @@ public class TestBigImage {
         var cCr = copyArray(rawYCbCr.Cr());
         var resCCr = new double[N][N];
 
+        System.out.println("IDCT");
         for (int i = 0; i < N; i += COS_SIZE) {
             for (int j = 0; j < N; j += COS_SIZE) {
                 idct(cY, i, j, resCY);
@@ -94,7 +96,7 @@ public class TestBigImage {
                 var value = DoubleRounder.round(0.25 * Ci * Cj * sum, 1);
 
                 //quantanization by Q10
-                value /= Q90[i - startX][j - startY];
+                value /= Q50[i - startX][j - startY];
 
                 target[i][j] = (int) value;
             }
@@ -108,7 +110,7 @@ public class TestBigImage {
         //quantanization by Q10
         for (int i = startX; i < endX; i++) {
             for (int j = startY; j < endY; j++) {
-                numbers[i][j] *= Q90[i - startX][j - startY];
+                numbers[i][j] *= Q50[i - startX][j - startY];
             }
         }
 
