@@ -15,11 +15,11 @@ import static org.example.util.ColorUtils.*;
 
 public class TestJpeg {
 
-    public static final int DOWNSAMPLE_CR = 4;
-    public static final int N = 512;
-    private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".bmp";
-    private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".myjpeg";
-    private static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + "_dec.bmp";
+    public static final int DOWNSAMPLE_CR = 16;
+    public static final int N = 1024;
+    private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "_\\" + N + ".bmp";
+    private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "_\\" + N + ".myjpeg";
+    private static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "_\\" + N + "_dec.bmp";
 
     public static void main(String[] args) throws IOException {
 
@@ -103,7 +103,7 @@ public class TestJpeg {
                 var value = DoubleRounder.round(0.25 * Ci * Cj * sum, 1);
 
                 //quantanization by Q10
-                value /= Q90[i - startX][j - startY];
+                value /= Q10[i - startX][j - startY];
 
                 target[i][j] = (int) value;
             }
@@ -117,7 +117,7 @@ public class TestJpeg {
         //quantanization by Q10
         for (int i = startX; i < endX; i++) {
             for (int j = startY; j < endY; j++) {
-                numbers[i][j] *= Q90[i - startX][j - startY];
+                numbers[i][j] *= Q10[i - startX][j - startY];
             }
         }
 
