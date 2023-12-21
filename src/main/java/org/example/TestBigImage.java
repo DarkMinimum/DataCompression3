@@ -6,16 +6,15 @@ import org.example.colorSpace.ColorSpaceYCbCr;
 import java.io.IOException;
 
 import static org.example.Test.*;
-import static org.example.Test.cos;
 import static org.example.colorSpace.ColorSpaceRGB.convertYCbCrToRGB;
 import static org.example.colorSpace.ColorSpaceYCbCr.toYCbCr;
-import static org.example.haff.HaffmanEncoding.decode;
-import static org.example.haff.HaffmanEncoding.encodeWithHuffman;
+import static org.example.jpeg.JpegCore.COS_SIZE;
 import static org.example.jpeg.JpegCore.DOWNSAMPLE_COEF_THE_COLOR;
-import static org.example.util.ColorUtils.*;
+import static org.example.util.ColorUtils.pathToRGB;
+import static org.example.util.ColorUtils.saveImage;
 
 public class TestBigImage {
-    public static final int N = 8;
+    public static final int N = 128;
     private static final String PATH = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".bmp";
     private static final String PATH_MY_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + ".myjpeg";
     private static final String PATH_DECOMPRESSED_JPEG = "C:\\Users\\danil\\IdeaProjects\\DataCompression3\\src\\main\\resources\\" + N + "\\" + N + "_dec.bmp";
@@ -24,89 +23,113 @@ public class TestBigImage {
         var bmp = pathToRGB(PATH);
         var ycbcr = toYCbCr(bmp);
 
-        var y = dct(ycbcr.Y());
-        var Cb = dct(ycbcr.Cb());
-        var Cr = dct(ycbcr.Cr());
+        var y = copyArray(ycbcr.Y());
+        var resY = new double[N][N];
 
-        var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr), DOWNSAMPLE_COEF_THE_COLOR);
-        saveMyJpeg(content, PATH_MY_JPEG);
-        var rawYCbCr = decode(content);
+        var Cb = copyArray(ycbcr.Cb());
+        var resCb = new double[N][N];
 
-        var cY = idct(rawYCbCr.Y());
-        var cCb = idct(rawYCbCr.Cb());
-        var cCr = idct(rawYCbCr.Cr());
+        var Cr = copyArray(ycbcr.Cr());
+        var resCr = new double[N][N];
 
-        var decompressed = new ColorSpaceYCbCr(cY, cCb, cCr);
+
+        for (int i = 0; i < N; i += COS_SIZE) {
+            for (int j = 0; j < N; j += COS_SIZE) {
+                dct(y, i, j, resY);
+                dct(Cb, i, j, resCb);
+                dct(Cr, i, j, resCr);
+            }
+        }
+
+
+//        var content = encodeWithHuffman(new ColorSpaceYCbCr(y, Cb, Cr), DOWNSAMPLE_COEF_THE_COLOR);
+//        saveMyJpeg(content, PATH_MY_JPEG);
+//        var rawYCbCr = decode(content);
+
+        var rawYCbCr = new ColorSpaceYCbCr(resY, resCb, resCr);
+
+        var cY = copyArray(rawYCbCr.Y());
+        var resCY = new double[N][N];
+
+        var cCb = copyArray(rawYCbCr.Cb());
+        var resCCb = new double[N][N];
+
+        var cCr = copyArray(rawYCbCr.Cr());
+        var resCCr = new double[N][N];
+
+        for (int i = 0; i < N; i += COS_SIZE) {
+            for (int j = 0; j < N; j += COS_SIZE) {
+                idct(cY, i, j, resCY);
+                idct(cCb, i, j, resCCb);
+                idct(cCr, i, j, resCCr);
+            }
+        }
+        var decompressed = new ColorSpaceYCbCr(resCY, resCCb, resCCr);
         saveImage(convertYCbCrToRGB(decompressed, DOWNSAMPLE_COEF_THE_COLOR), PATH_DECOMPRESSED_JPEG);
     }
 
-    private static double[][] dct(double[][] numbers) {
-        var target = new double[N][N];
-        //copy initial
-        var copy = copyArray(numbers);
+    private static void dct(double[][] numbers, int startX, int startY, double[][] target) {
+        var endX = startX + COS_SIZE;
+        var endY = startY + COS_SIZE;
 
         //shift -128
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                copy[i][j] -= 128;
+        for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
+                numbers[i][j] -= 128;
             }
         }
 
         //compression by itself
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                var Ci = C(i);
-                var Cj = C(j);
+        for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
+                var Ci = C(i - startX);
+                var Cj = C(j - startY);
                 var sum = 0.0;
-                for (int x = 0; x < N; x++) {
-                    for (int y = 0; y < N; y++) {
-                        sum += copy[x][y] * cos(x, i) * cos(y, j);
+                for (int x = startX; x < endX; x++) {
+                    for (int y = startY; y < endY; y++) {
+                        sum += numbers[x][y] * cos(x - startX, i - startX) * cos(y - startY, j - startY);
                     }
                 }
 
-                target[i][j] = (int) DoubleRounder.round(0.25 * Ci * Cj * sum, 1);
+                var value = DoubleRounder.round(0.25 * Ci * Cj * sum, 1);
 
                 //quantanization by Q10
-                target[i][j] /= Q90[i][j];
+                value /= Q90[i - startX][j - startY];
+
+                target[i][j] = (int) value;
             }
         }
-
-        return target;
-
     }
 
-    private static double[][] idct(double[][] numbers) {
-        //copy
-        var copy = copyArray(numbers);
-        var target = new double[N][N];
+    private static void idct(double[][] numbers, int startX, int startY, double[][] target) {
+        var endX = startX + COS_SIZE;
+        var endY = startY + COS_SIZE;
 
         //quantanization by Q10
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                copy[i][j] *= Q90[i][j];
+        for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
+                numbers[i][j] *= Q90[i - startX][j - startY];
             }
         }
 
         //compression by itself
-        for (int u = 0; u < N; u++) {
-            for (int v = 0; v < N; v++) {
+        for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
                 double sum = 0.0;
-                for (int i = 0; i < N; i++) {
-                    for (int j = 0; j < N; j++) {
-                        double Ci = C(i);
-                        double Cj = C(j);
-                        double cosU = cos(u, i);
-                        double cosV = cos(v, j);
-                        sum += Ci * Cj * copy[i][j] * cosU * cosV;
+                for (int x = startX; x < endX; x++) {
+                    for (int y = startY; y < endY; y++) {
+                        double Ci = C(x - startX);
+                        double Cj = C(y - startY);
+                        double cosU = cos(i - startX, x - startX);
+                        double cosV = cos(j - startY, y - startY);
+                        sum += Ci * Cj * numbers[x][y] * cosU * cosV;
                     }
                 }
-                target[u][v] = (int) DoubleRounder.round(0.25 * sum, 1);
+                target[i][j] = (int) DoubleRounder.round(0.25 * sum, 1);
                 //shift +128
-                target[u][v] += 128;
+                target[i][j] += 128;
             }
         }
-
-        return target;
     }
 
     private static double[][] copyArray(double[][] numbers) {

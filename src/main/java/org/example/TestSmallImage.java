@@ -78,7 +78,6 @@ public class TestSmallImage {
 
     }
 
-
     private static void idct(double[][] numbers, double[][] target) {
         //copy
         var copy = copyArray(numbers);
