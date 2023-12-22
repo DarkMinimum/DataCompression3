@@ -113,11 +113,9 @@ public class HaffmanEncoding {
         var symbols = source.split("\\.");
         var counter = 1;
         var result = new StringBuilder();
-
         var current = symbols[0];
         for (int i = 1; i < symbols.length; i++) {
             var word = symbols[i];
-
             if (word.equals(current)) {
                 counter++;
             } else {
@@ -130,7 +128,6 @@ public class HaffmanEncoding {
                 result.append(".");
 
             }
-
             if (i == symbols.length - 1) {
                 if (word.equals(current)) {
                     counter++;
@@ -138,13 +135,10 @@ public class HaffmanEncoding {
                 } else {
                     result.append(word);
                 }
-
                 break;
             }
-
             current = word;
         }
-
         return result.toString();
     }
 

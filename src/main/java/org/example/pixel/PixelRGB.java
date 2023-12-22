@@ -25,5 +25,4 @@ public record PixelRGB(int R, int G, int B) {
         long b = Math.round(y + 1.772 * (cb - 128.0));
         return new PixelRGB((int) r, (int) g, (int) b);
     }
-
 }
